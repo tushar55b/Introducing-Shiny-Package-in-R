@@ -1,0 +1,463 @@
+Load packages
+
+```{r}
+library(shiny)
+library(ggplot2)
+library(dplyr)
+```
+
+Structure and Layout
+
+```{r, warning=FALSE}
+# Define UI 
+
+ui <- fluidPage(
+
+  sidebarLayout(
+
+    # Inputs: Select variables to plot
+    sidebarPanel(
+      
+      selectInput()
+      
+    ),
+
+    # Output: Show plot
+    mainPanel()
+  )
+)
+
+# Define server 
+server <- function(input, output, session) {
+  
+  output$scatterplot <- renderPlot({
+    
+  })
+}
+
+# Create a Shiny app object 
+shinyApp(ui = ui, server = server)
+```
+
+Load data
+
+```{r, warning=FALSE}
+# Get the data
+file <- "https://github.com/rstudio-education/shiny-course/raw/main/movies.RData"
+destfile <- "movies.RData"
+
+download.file(file, destfile)
+
+# Load data 
+load("movies.RData")
+```
+
+Summary of data
+
+```{r}
+names(movies)
+# summary(movies)
+```
+
+Drop-down features
+
+```{r, warning=FALSE}
+# Define UI 
+
+ui <- fluidPage(
+
+  sidebarLayout(
+
+    # Inputs: Select variables to plot
+    sidebarPanel(
+
+      # Select variable for y-axis
+      selectInput(
+        inputId = "y",
+        label = "Y-axis:",
+        choices = c("imdb_rating", "imdb_num_votes", "critics_score", "audience_score", "runtime"),
+        selected = "audience_score"
+      ),
+      # Select variable for x-axis
+      selectInput(
+        inputId = "x",
+        label = "X-axis:",
+        choices = c("imdb_rating", "imdb_num_votes", "critics_score", "audience_score", "runtime"),
+        selected = "critics_score"
+      )
+    ),
+
+    # Output: Show scatterplot
+    mainPanel(
+      plotOutput(outputId = "scatterplot")
+    )
+  )
+)
+
+# Define server 
+server <- function(input, output, session) {
+  output$scatterplot <- renderPlot({
+    ggplot(data = movies, aes_string(x = input$x, y = input$y)) +
+      geom_point()
+  })
+}
+
+# Create a Shiny app object 
+shinyApp(ui = ui, server = server)
+```
+
+Coloring by Features
+
+```{r, warning=FALSE}
+
+# Define UI 
+ui <- fluidPage(
+  
+  sidebarLayout(
+    
+    # Inputs: Select variables to plot
+    sidebarPanel(
+      
+      # Select variable for y-axis
+      selectInput(inputId = "y", 
+                  label = "Y-axis:",
+                  choices = c("IMDB rating"  = "imdb_rating", 
+                              "IMDB number of votes" = "imdb_num_votes", 
+                              "Critics score" = "critics_score", 
+                              "Audience score" = "audience_score", 
+                              "Runtime" = "runtime"), 
+                  selected = "audience_score"),
+      
+      # Select variable for x-axis
+      selectInput(inputId = "x", 
+                  label = "X-axis:",
+                  choices = c(
+                    "IMDB rating" = "imdb_rating", 
+                    "IMDB number of votes" = "imdb_num_votes", 
+                    "Critics score" = "critics_score", 
+                    "Audience score" = "audience_score", 
+                    "Runtime" = "runtime"), 
+                  selected = "critics_score"),
+      
+      #select color
+      selectInput(inputId = "z", 
+                  label = "Color by:",
+                  choices = c(
+                    "Title type" = "title_type", 
+                    "Genre" = "genre", 
+                    "MPAA rating" = "mpaa_rating", 
+                    "Critics rating" = "critics_rating", 
+                    "Audience rating" = "audience_rating"),
+                  selected = "mpaa_rating")
+    ),
+    
+    # Output: Show scatterplot
+    mainPanel(
+      plotOutput(outputId = "scatterplot")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  output$scatterplot <- renderPlot({
+    ggplot(data = movies, aes_string(x = input$x, y = input$y,
+                                     color = input$z)) +
+      geom_point()
+  })
+}
+
+shinyApp(ui = ui, server = server)
+```
+
+Slider (Alpha/Size)
+
+```{r, warning=FALSE}
+# Define UI 
+ui <- fluidPage(
+  
+  sidebarLayout(
+    
+    # Inputs: Select variables to plot
+    sidebarPanel(
+      
+      # Select variable for y-axis
+      selectInput(inputId = "y", 
+                  label = "Y-axis:",
+                  choices = c("IMDB rating"  = "imdb_rating", 
+                              "IMDB number of votes" = "imdb_num_votes", 
+                              "Critics score" = "critics_score", 
+                              "Audience score" = "audience_score", 
+                              "Runtime" = "runtime"), 
+                  selected = "audience_score"),
+      
+      # Select variable for x-axis
+      selectInput(inputId = "x", 
+                  label = "X-axis:",
+                  choices = c(
+                    "IMDB rating" = "imdb_rating", 
+                    "IMDB number of votes" = "imdb_num_votes", 
+                    "Critics score" = "critics_score", 
+                    "Audience score" = "audience_score", 
+                    "Runtime" = "runtime"), 
+                  selected = "critics_score"),
+      
+      #select color
+      selectInput(inputId = "z", 
+                  label = "Color by:",
+                  choices = c(
+                    "Title type" = "title_type", 
+                    "Genre" = "genre", 
+                    "MPAA rating" = "mpaa_rating", 
+                    "Critics rating" = "critics_rating", 
+                    "Audience rating" = "audience_rating"),
+                  selected = "mpaa_rating"),
+      
+      #slider for point density (alpha)
+      sliderInput(
+          inputId = "alpha",
+          label = "Alpha:",
+          min = 0, max = 1,
+          value = 0.5
+      ),
+      
+      sliderInput(
+        inputId = "size",
+        label = "Size:",
+        min = 0, max = 5,
+        value = 2
+      )
+      
+    ),
+    
+    mainPanel(
+      plotOutput(outputId = "scatterplot")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  output$scatterplot <- renderPlot({
+    ggplot(data = movies, aes_string(x = input$x, y = input$y,
+                                     color = input$z)) +
+      geom_point(alpha = input$alpha,
+                 size = input$size)
+  })
+  }
+
+shinyApp(ui = ui, server = server)
+
+```
+
+Date Range
+
+```{r, warning=FALSE}
+
+min_date <- min(movies$thtr_rel_date)
+max_date <- max(movies$thtr_rel_date)
+
+# Define UI 
+ui <- fluidPage(
+  
+  sidebarLayout(
+    
+    # Inputs: Select variables to plot
+    sidebarPanel(
+      
+      # Select variable for y-axis
+      selectInput(inputId = "y", 
+                  label = "Y-axis:",
+                  choices = c("IMDB rating"  = "imdb_rating", 
+                              "IMDB number of votes" = "imdb_num_votes", 
+                              "Critics score" = "critics_score", 
+                              "Audience score" = "audience_score", 
+                              "Runtime" = "runtime"), 
+                  selected = "audience_score"),
+      
+      # Select variable for x-axis
+      selectInput(inputId = "x", 
+                  label = "X-axis:",
+                  choices = c(
+                    "IMDB rating" = "imdb_rating", 
+                    "IMDB number of votes" = "imdb_num_votes", 
+                    "Critics score" = "critics_score", 
+                    "Audience score" = "audience_score", 
+                    "Runtime" = "runtime"), 
+                  selected = "critics_score"),
+      
+      #select color
+      selectInput(inputId = "z", 
+                  label = "Color by:",
+                  choices = c(
+                    "Title type" = "title_type", 
+                    "Genre" = "genre", 
+                    "MPAA rating" = "mpaa_rating", 
+                    "Critics rating" = "critics_rating", 
+                    "Audience rating" = "audience_rating"),
+                  selected = "mpaa_rating"),
+      
+      #slider for point density (alpha)
+      sliderInput(
+          inputId = "alpha",
+          label = "Alpha:",
+          min = 0, max = 1,
+          value = 0.5
+      ),
+      
+      sliderInput(
+        inputId = "size",
+        label = "Size:",
+        min = 0, max = 5,
+        value = 2
+      ),
+      
+      dateRangeInput(
+        inputId = "date",
+        label = "Select dates:",
+        start = "1970-05-20", end = "2014-01-01",
+        min = min_date, max = max_date,
+        startview = "year"
+      )
+      
+    ),
+    
+    mainPanel(
+      plotOutput(outputId = "scatterplot")
+    )
+  )
+)
+
+server <- function(input, output, session) {
+  output$scatterplot <- renderPlot({
+    req(input$date)
+    movies_selected_date <- movies %>%
+      filter(thtr_rel_date >= as.POSIXct(input$date[1]) & thtr_rel_date <= as.POSIXct(input$date[2]))
+    ggplot(data = movies_selected_date, aes_string(x = input$x, y = input$y,
+                                     color = input$z)) +
+      geom_point(alpha = input$alpha,
+                 size = input$size)
+  })
+}
+
+shinyApp(ui = ui, server = server)
+
+```
+
+Check-boxes
+
+```{r, warning=FALSE}
+
+min_date <- min(movies$thtr_rel_date)
+max_date <- max(movies$thtr_rel_date)
+
+# ratio of critics and audience scores
+movies <- movies %>%
+  mutate(score_ratio = audience_score / critics_score)
+
+# Define UI 
+ui <- fluidPage(
+  
+  sidebarLayout(
+    
+    # Inputs: Select variables to plot
+    sidebarPanel(
+      
+      # Select variable for y-axis
+      selectInput(inputId = "y", 
+                  label = "Y-axis:",
+                  choices = c("IMDB rating"  = "imdb_rating", 
+                              "IMDB number of votes" = "imdb_num_votes", 
+                              "Critics score" = "critics_score", 
+                              "Audience score" = "audience_score", 
+                              "Runtime" = "runtime"), 
+                  selected = "audience_score"),
+      
+      # Select variable for x-axis
+      selectInput(inputId = "x", 
+                  label = "X-axis:",
+                  choices = c(
+                    "IMDB rating" = "imdb_rating", 
+                    "IMDB number of votes" = "imdb_num_votes", 
+                    "Critics score" = "critics_score", 
+                    "Audience score" = "audience_score", 
+                    "Runtime" = "runtime"), 
+                  selected = "critics_score"),
+      
+      #select color
+      selectInput(inputId = "z", 
+                  label = "Color by:",
+                  choices = c(
+                    "Title type" = "title_type", 
+                    "Genre" = "genre", 
+                    "MPAA rating" = "mpaa_rating", 
+                    "Critics rating" = "critics_rating", 
+                    "Audience rating" = "audience_rating"),
+                  selected = "mpaa_rating"),
+      
+      #slider for point density (alpha)
+      sliderInput(
+          inputId = "alpha",
+          label = "Alpha:",
+          min = 0, max = 1,
+          value = 0.5
+      ),
+      
+      sliderInput(
+        inputId = "size",
+        label = "Size:",
+        min = 0, max = 5,
+        value = 2
+      ),
+      
+      dateRangeInput(
+        inputId = "date",
+        label = "Select dates:",
+        start = "1970-05-20", end = "2014-01-01",
+        min = min_date, max = max_date,
+        startview = "year"
+      ),
+      
+      # Subset for title types
+      checkboxGroupInput(inputId = "selected_title_type", 
+                         label = "Select title type:",
+                         choices = levels(movies$title_type),
+                         selected = levels(movies$title_type)
+                         )
+    ),
+    
+    mainPanel(
+      # Show scatterplot
+      plotOutput(outputId = "scatterplot")
+    )
+  )
+)
+
+server <- function(input, output, session){
+  
+  output$scatterplot <- renderPlot(
+    {
+    req(input$date)
+    movies_selected_date <- movies %>%
+      filter(thtr_rel_date >= as.POSIXct(input$date[1]) & thtr_rel_date <= as.POSIXct(input$date[2]))
+    ggplot(data = movies_selected_date, aes_string(x = input$x, y = input$y,
+                                     color = input$z)) +
+      geom_point(alpha = input$alpha,
+                 size = input$size)
+    }
+  )
+  
+  output$scatterplot <- renderPlot(
+    {
+      movies_selected_type <- movies %>%
+        filter(title_type %in% input$selected_title_type)
+        ggplot(data = movies_selected_type, aes_string(x = input$x,
+                                         y = input$y,
+                                         color = input$z))+
+          geom_point(alpha = input$alpha,
+                 size = input$size)
+    })
+  
+}
+
+shinyApp(ui = ui, server = server)
+
+```
